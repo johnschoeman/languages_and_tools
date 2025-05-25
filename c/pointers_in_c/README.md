@@ -1,9 +1,13 @@
-# Linked List
+# Pointers In C
 
 ## Build
 
-`gcc linked_list.c -o linked_list`
+`gcc main.c -o /build/main`
 
 ## Run
 
-`./linked_list`
+`./build/main`
+
+## Debug
+
+`gdb ./build/main`
