@@ -15,3 +15,10 @@ target/
 
 dist
 .stack-work/
+
+# Python
+
+bin/
+lib/
+include/
+__pycache__/
