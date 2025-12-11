@@ -10,3 +10,8 @@ cmake_install.cmake
 # Rust
 
 target/
+
+# Haskell
+
+dist
+.stack-work/
