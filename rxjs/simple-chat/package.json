@@ -1,0 +1,26 @@
+{
+  "name": "simple-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client:start": "node bin/serve_client.mjs",
+    "server:start": "node bin/start_server.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.15.13",
+    "fp-ts": "^2.13.1",
+    "rxjs": "^7.5.7",
+    "uuid": "^9.0.0",
+    "ws": "^8.11.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
+    "browser-sync": "^2.27.10",
+    "chalk": "^5.1.2",
+    "chokidar": "^3.5.3"
+  }
+}
