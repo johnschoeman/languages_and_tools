@@ -55,6 +55,7 @@ enum RotationButton {
     Up,
     Down,
     ToggleAuto,
+    Reset,
 }
 
 impl Default for AutoRotation {
@@ -68,20 +69,14 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Parent entity for rigid rotation
+    // Main/central cube - this is the parent that everything rotates around
     commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
+        MeshMaterial3d(materials.add(Color::srgb(FIRST_CUBE_COLOR.0, FIRST_CUBE_COLOR.1, FIRST_CUBE_COLOR.2))),
         Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0),
-        Visibility::default(),
         RotatingCube,
     )).with_children(|parent| {
-        // First cube
-        parent.spawn((
-            Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
-            MeshMaterial3d(materials.add(Color::srgb(FIRST_CUBE_COLOR.0, FIRST_CUBE_COLOR.1, FIRST_CUBE_COLOR.2))),
-            Transform::from_xyz(0.0, 0.0, 0.0),
-        ));
-
-        // Second cube - rotated 45 degrees on X and Y, offset for 1/5 overlap
+        // Second cube - attached as child, rotated 45 degrees on X and Y, offset for 1/5 overlap
         parent.spawn((
             Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
             MeshMaterial3d(materials.add(Color::srgb(SECOND_CUBE_COLOR.0, SECOND_CUBE_COLOR.1, SECOND_CUBE_COLOR.2))),
@@ -136,6 +131,7 @@ fn setup_ui(mut commands: Commands) {
                     spawn_button(panel, "⬅ Left (A)", RotationButton::Left);
                     spawn_button(panel, "➡ Right (D)", RotationButton::Right);
                     spawn_button(panel, "⏯ Auto (Space)", RotationButton::ToggleAuto);
+                    spawn_button(panel, "↺ Reset (R)", RotationButton::Reset);
                 });
         });
 }
@@ -177,6 +173,11 @@ fn handle_button_interaction(
                 RotationButton::ToggleAuto => {
                     auto_rotation.enabled = !auto_rotation.enabled;
                 }
+                RotationButton::Reset => {
+                    for mut transform in &mut cube_query {
+                        transform.rotation = Quat::IDENTITY;
+                    }
+                }
                 _ => {
                     for mut transform in &mut cube_query {
                         match button_type {
@@ -184,7 +185,7 @@ fn handle_button_interaction(
                             RotationButton::Right => transform.rotate_y(-BUTTON_ROTATION_AMOUNT),
                             RotationButton::Up => transform.rotate_x(BUTTON_ROTATION_AMOUNT),
                             RotationButton::Down => transform.rotate_x(-BUTTON_ROTATION_AMOUNT),
-                            RotationButton::ToggleAuto => {}
+                            RotationButton::ToggleAuto | RotationButton::Reset => {}
                         }
                     }
                 }
@@ -202,6 +203,14 @@ fn rotate_cube(
     // Toggle auto-rotation with space bar
     if keyboard.just_pressed(KeyCode::Space) {
         auto_rotation.enabled = !auto_rotation.enabled;
+    }
+
+    // Reset rotation with R key
+    if keyboard.just_pressed(KeyCode::KeyR) {
+        for mut transform in &mut query {
+            transform.rotation = Quat::IDENTITY;
+        }
+        return;
     }
 
     let keyboard_delta = time.delta_secs() * KEYBOARD_ROTATION_SPEED;
