@@ -1,6 +1,5 @@
 use bevy::{
     app::AppExit,
-    color::palettes::css,
     prelude::*,
     render::view::screenshot::{save_to_disk, Screenshot},
 };
@@ -331,13 +330,8 @@ fn draw_debug_axes(
         return;
     }
 
-    // Draw coordinate axes
-    // X-axis (Red)
-    gizmos.line(Vec3::ZERO, Vec3::X * AXIS_LENGTH, css::RED);
-    // Y-axis (Green)
-    gizmos.line(Vec3::ZERO, Vec3::Y * AXIS_LENGTH, css::GREEN);
-    // Z-axis (Blue)
-    gizmos.line(Vec3::ZERO, Vec3::Z * AXIS_LENGTH, css::BLUE);
+    // Draw coordinate axes using gizmos.axes() which shows labeled axes
+    gizmos.axes(Transform::IDENTITY, AXIS_LENGTH);
 }
 
 fn update_debug_text(
@@ -355,6 +349,9 @@ fn update_debug_text(
 
                 **text = format!(
                     "Debug Mode (D)\n\
+                    \n\
+                    Axes: Red=X, Green=Y, Blue=Z\n\
+                    \n\
                     Rotation (Euler XYZ):\n\
                     X: {:.1}°\n\
                     Y: {:.1}°\n\
