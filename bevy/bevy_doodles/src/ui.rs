@@ -34,6 +34,31 @@ const INPUT_FONT_SIZE: f32 = 14.0;
 const TITLE_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 const SECTION_TEXT_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7);
 
+// Initial configuration values
+struct CubeConfig {
+    main_rotation_x: f32,
+    main_rotation_y: f32,
+    main_rotation_z: f32,
+    child_rotation_x: f32,
+    child_rotation_y: f32,
+    child_rotation_z: f32,
+    child_position_x: f32,
+    child_position_y: f32,
+    child_position_z: f32,
+}
+
+const CUBE_CONFIG: CubeConfig = CubeConfig {
+    main_rotation_x: 115.0,
+    main_rotation_y: 0.0,
+    main_rotation_z: -45.0,
+    child_rotation_x: 0.0,
+    child_rotation_y: 45.0,
+    child_rotation_z: 45.0,
+    child_position_x: 0.9,
+    child_position_y: 0.0,
+    child_position_z: -0.9,
+};
+
 #[derive(Component)]
 pub enum RotationButton {
     ToggleAuto,
@@ -180,9 +205,9 @@ fn spawn_main_rotation_panel(commands: &mut Commands) {
             ));
 
             // Rotation inputs
-            spawn_input_row(panel, "X:", "115.0", InputField::MainRotationX);
-            spawn_input_row(panel, "Y:", "0.0", InputField::MainRotationY);
-            spawn_input_row(panel, "Z:", "-45.0", InputField::MainRotationZ);
+            spawn_input_row(panel, "X:", &CUBE_CONFIG.main_rotation_x.to_string(), InputField::MainRotationX);
+            spawn_input_row(panel, "Y:", &CUBE_CONFIG.main_rotation_y.to_string(), InputField::MainRotationY);
+            spawn_input_row(panel, "Z:", &CUBE_CONFIG.main_rotation_z.to_string(), InputField::MainRotationZ);
         });
 }
 
@@ -220,9 +245,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
-            spawn_input_row(panel, "X:", "0.0", InputField::ChildRotationX);
-            spawn_input_row(panel, "Y:", "45.0", InputField::ChildRotationY);
-            spawn_input_row(panel, "Z:", "45.0", InputField::ChildRotationZ);
+            spawn_input_row(panel, "X:", &CUBE_CONFIG.child_rotation_x.to_string(), InputField::ChildRotationX);
+            spawn_input_row(panel, "Y:", &CUBE_CONFIG.child_rotation_y.to_string(), InputField::ChildRotationY);
+            spawn_input_row(panel, "Z:", &CUBE_CONFIG.child_rotation_z.to_string(), InputField::ChildRotationZ);
 
             // Translation section
             panel.spawn((
@@ -233,9 +258,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
-            spawn_input_row(panel, "X:", "0.9", InputField::ChildTranslationX);
-            spawn_input_row(panel, "Y:", "0.0", InputField::ChildTranslationY);
-            spawn_input_row(panel, "Z:", "-0.9", InputField::ChildTranslationZ);
+            spawn_input_row(panel, "X:", &CUBE_CONFIG.child_position_x.to_string(), InputField::ChildTranslationX);
+            spawn_input_row(panel, "Y:", &CUBE_CONFIG.child_position_y.to_string(), InputField::ChildTranslationY);
+            spawn_input_row(panel, "Z:", &CUBE_CONFIG.child_position_z.to_string(), InputField::ChildTranslationZ);
         });
 }
 
