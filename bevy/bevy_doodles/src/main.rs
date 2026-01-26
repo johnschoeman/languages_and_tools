@@ -12,7 +12,7 @@ mod debug;
 mod text_input;
 
 use scene::{AutoRotation, setup as setup_scene, rotate_cube, apply_leaf_rotation_from_inputs, apply_main_rotation_from_inputs};
-use ui::{setup_ui, handle_button_interaction};
+use ui::{setup_ui, handle_button_interaction, UiVisibility, toggle_ui_visibility, update_ui_visibility};
 use debug::{
     DebugMode, setup_debug_ui, toggle_debug_mode, draw_debug_axes,
     update_debug_text, screenshot_on_f12, auto_screenshot,
@@ -41,9 +41,11 @@ fn main() {
         .init_resource::<AutoRotation>()
         .init_resource::<DebugMode>()
         .init_resource::<InputFocusState>()
+        .init_resource::<UiVisibility>()
         .add_systems(Startup, (setup_scene, setup_ui, setup_debug_ui))
         .add_systems(Update, (rotate_cube, handle_button_interaction, screenshot_on_f12))
         .add_systems(Update, (toggle_debug_mode, draw_debug_axes, update_debug_text))
+        .add_systems(Update, (toggle_ui_visibility, update_ui_visibility))
         .add_systems(Update, (
             handle_text_input_focus,
             handle_keyboard_input,

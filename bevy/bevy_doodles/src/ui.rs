@@ -59,6 +59,20 @@ const CUBE_CONFIG: CubeConfig = CubeConfig {
     leaf_position_z: -0.9,
 };
 
+#[derive(Resource)]
+pub struct UiVisibility {
+    pub visible: bool,
+}
+
+impl Default for UiVisibility {
+    fn default() -> Self {
+        Self { visible: true }
+    }
+}
+
+#[derive(Component)]
+pub struct ToggleableUi;
+
 #[derive(Component)]
 pub enum RotationButton {
     ToggleAuto,
@@ -74,13 +88,16 @@ pub enum RotationButton {
 pub fn setup_ui(mut commands: Commands) {
     // Root UI container
     commands
-        .spawn(Node {
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            justify_content: JustifyContent::SpaceBetween,
-            padding: UiRect::all(Val::Px(UI_PADDING)),
-            ..default()
-        })
+        .spawn((
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                justify_content: JustifyContent::SpaceBetween,
+                padding: UiRect::all(Val::Px(UI_PADDING)),
+                ..default()
+            },
+            ToggleableUi,
+        ))
         .with_children(|parent| {
             // Left side button panel
             parent
@@ -192,6 +209,7 @@ fn spawn_main_rotation_panel(commands: &mut Commands) {
                 ..default()
             },
             BackgroundColor(Color::srgb(PANEL_BG_COLOR.0, PANEL_BG_COLOR.1, PANEL_BG_COLOR.2)),
+            ToggleableUi,
         ))
         .with_children(|panel: &mut ChildSpawnerCommands| {
             // Title
@@ -224,6 +242,7 @@ fn spawn_leaf_config_panel(commands: &mut Commands) {
                 ..default()
             },
             BackgroundColor(Color::srgb(PANEL_BG_COLOR.0, PANEL_BG_COLOR.1, PANEL_BG_COLOR.2)),
+            ToggleableUi,
         ))
         .with_children(|panel: &mut ChildSpawnerCommands| {
             // Title
@@ -324,4 +343,26 @@ fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str
                 TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
         });
+}
+
+pub fn toggle_ui_visibility(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut ui_visibility: ResMut<UiVisibility>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyH) {
+        ui_visibility.visible = !ui_visibility.visible;
+    }
+}
+
+pub fn update_ui_visibility(
+    ui_visibility: Res<UiVisibility>,
+    mut ui_query: Query<&mut Node, With<ToggleableUi>>,
+) {
+    for mut node in &mut ui_query {
+        node.display = if ui_visibility.visible {
+            Display::Flex
+        } else {
+            Display::None
+        };
+    }
 }
