@@ -160,9 +160,9 @@ fn spawn_main_rotation_panel(commands: &mut Commands) {
             ));
 
             // Rotation inputs
-            spawn_input_row(panel, "X:", "0.0", InputField::MainRotationX);
+            spawn_input_row(panel, "X:", "115.0", InputField::MainRotationX);
             spawn_input_row(panel, "Y:", "0.0", InputField::MainRotationY);
-            spawn_input_row(panel, "Z:", "0.0", InputField::MainRotationZ);
+            spawn_input_row(panel, "Z:", "-45.0", InputField::MainRotationZ);
         });
 }
 
@@ -200,9 +200,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(0.7, 0.7, 0.7)),
             ));
-            spawn_input_row(panel, "X:", "45.0", InputField::ChildRotationX);
-            spawn_input_row(panel, "Y:", "22.5", InputField::ChildRotationY);
-            spawn_input_row(panel, "Z:", "22.5", InputField::ChildRotationZ);
+            spawn_input_row(panel, "X:", "0.0", InputField::ChildRotationX);
+            spawn_input_row(panel, "Y:", "45.0", InputField::ChildRotationY);
+            spawn_input_row(panel, "Z:", "45.0", InputField::ChildRotationZ);
 
             // Translation section
             panel.spawn((
@@ -213,9 +213,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(0.7, 0.7, 0.7)),
             ));
-            spawn_input_row(panel, "X:", "0.8", InputField::ChildTranslationX);
-            spawn_input_row(panel, "Y:", "-1.0", InputField::ChildTranslationY);
-            spawn_input_row(panel, "Z:", "0.0", InputField::ChildTranslationZ);
+            spawn_input_row(panel, "X:", "0.9", InputField::ChildTranslationX);
+            spawn_input_row(panel, "Y:", "0.0", InputField::ChildTranslationY);
+            spawn_input_row(panel, "Z:", "-0.9", InputField::ChildTranslationZ);
         });
 }
 
