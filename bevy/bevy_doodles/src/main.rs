@@ -11,7 +11,7 @@ mod ui;
 mod debug;
 mod text_input;
 
-use scene::{AutoRotation, setup as setup_scene, rotate_cube, apply_leaf_rotation_from_inputs, apply_main_rotation_from_inputs};
+use scene::{AutoRotation, setup as setup_scene, rotate_cube, apply_leaf_rotation_from_inputs, apply_main_rotation_from_inputs, sync_main_rotation_to_inputs};
 use ui::{setup_ui, handle_button_interaction, UiVisibility, toggle_ui_visibility, update_ui_visibility};
 use debug::{
     DebugMode, setup_debug_ui, toggle_debug_mode, draw_debug_axes,
@@ -53,6 +53,7 @@ fn main() {
             update_text_input_display,
         ))
         .add_systems(Update, apply_leaf_rotation_from_inputs)
+        .add_systems(Update, sync_main_rotation_to_inputs)
         .add_systems(Update, apply_main_rotation_from_inputs)
         .add_systems(Update, auto_screenshot)
         .run();

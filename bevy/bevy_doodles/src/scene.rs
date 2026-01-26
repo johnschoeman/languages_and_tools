@@ -13,6 +13,9 @@ const CUBE_Y_POSITION: f32 = 0.5;
 const SECOND_CUBE_X_OFFSET: f32 = 0.8;
 const SECOND_CUBE_ROTATION_DEGREES: f32 = 45.0;
 
+// Initial rotation (matches CUBE_CONFIG in ui.rs)
+const MAIN_CUBE_INITIAL_ROTATION: (f32, f32, f32) = (115.0, 0.0, -45.0);
+
 // Color constants
 const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7); // Light gray
 const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.4, 0.4); // Darker gray
@@ -53,7 +56,13 @@ pub fn setup(
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
         MeshMaterial3d(materials.add(Color::srgb(MAIN_CUBE_COLOR.0, MAIN_CUBE_COLOR.1, MAIN_CUBE_COLOR.2))),
-        Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0),
+        Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0)
+            .with_rotation(Quat::from_euler(
+                EulerRot::XYZ,
+                MAIN_CUBE_INITIAL_ROTATION.0.to_radians(),
+                MAIN_CUBE_INITIAL_ROTATION.1.to_radians(),
+                MAIN_CUBE_INITIAL_ROTATION.2.to_radians(),
+            )),
         RotatingCube,
     )).with_children(|parent| {
         // Wireframe edges for main cube
@@ -200,11 +209,58 @@ pub fn apply_leaf_rotation_from_inputs(
     }
 }
 
+pub fn sync_main_rotation_to_inputs(
+    main_query: Query<&Transform, With<RotatingCube>>,
+    mut input_query: Query<(&InputField, &mut TextInput)>,
+) {
+    // Get the current rotation of the main cube
+    let Some(transform) = main_query.iter().next() else {
+        return;
+    };
+
+    // Convert quaternion to Euler angles (in radians)
+    let (x, y, z) = transform.rotation.to_euler(EulerRot::XYZ);
+
+    // Convert to degrees and update text inputs (only if not focused)
+    for (field, mut input) in &mut input_query {
+        if input.is_focused {
+            continue; // Don't update while user is editing
+        }
+
+        let new_value = match field {
+            InputField::MainRotationX => format!("{:.0}", x.to_degrees()),
+            InputField::MainRotationY => format!("{:.0}", y.to_degrees()),
+            InputField::MainRotationZ => format!("{:.0}", z.to_degrees()),
+            _ => continue,
+        };
+
+        input.value = new_value;
+    }
+}
+
 pub fn apply_main_rotation_from_inputs(
+    changed_query: Query<&InputField, Changed<TextInput>>,
     input_query: Query<(&InputField, &TextInput)>,
     mut main_query: Query<&mut Transform, With<RotatingCube>>,
 ) {
-    // Collect rotation values from inputs
+    // Check if any main rotation input changed
+    let mut has_main_rotation_change = false;
+    for field in &changed_query {
+        match field {
+            InputField::MainRotationX | InputField::MainRotationY | InputField::MainRotationZ => {
+                has_main_rotation_change = true;
+                break;
+            }
+            _ => {}
+        }
+    }
+
+    // Only apply if a main rotation input actually changed
+    if !has_main_rotation_change {
+        return;
+    }
+
+    // Collect rotation values from all inputs
     let mut rot_x = 0.0;
     let mut rot_y = 0.0;
     let mut rot_z = 0.0;
