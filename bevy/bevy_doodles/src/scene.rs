@@ -20,7 +20,7 @@ const SECOND_CUBE_COLOR: (f32, f32, f32) = (0.6, 0.7, 0.8);
 const LIGHT_POSITION: (f32, f32, f32) = (3.0, 6.0, 4.0);
 
 // Camera constants
-const CAMERA_POSITION: (f32, f32, f32) = (0.0, 0.5, 8.0);
+const CAMERA_POSITION: (f32, f32, f32) = (0.0, 0.0, 8.0);
 
 #[derive(Resource)]
 pub struct AutoRotation {
@@ -51,7 +51,7 @@ pub fn setup(
         Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0),
         RotatingCube,
     )).with_children(|parent| {
-        // Second cube - attached as child, rotated 45 degrees on X and Y, offset for 1/5 overlap
+        // Second cube - attached as child
         parent.spawn((
             Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
             MeshMaterial3d(materials.add(Color::srgb(SECOND_CUBE_COLOR.0, SECOND_CUBE_COLOR.1, SECOND_CUBE_COLOR.2))),
@@ -155,6 +155,7 @@ pub fn apply_child_rotation_from_inputs(
             InputField::ChildTranslationX => trans_x = value,
             InputField::ChildTranslationY => trans_y = value,
             InputField::ChildTranslationZ => trans_z = value,
+            _ => {}
         }
     }
 
@@ -171,5 +172,35 @@ pub fn apply_child_rotation_from_inputs(
                 transform.translation = Vec3::new(trans_x, trans_y, trans_z);
             }
         }
+    }
+}
+
+pub fn apply_main_rotation_from_inputs(
+    input_query: Query<(&InputField, &TextInput)>,
+    mut main_query: Query<&mut Transform, With<RotatingCube>>,
+) {
+    // Collect rotation values from inputs
+    let mut rot_x = 0.0;
+    let mut rot_y = 0.0;
+    let mut rot_z = 0.0;
+
+    for (field, input) in &input_query {
+        let value = input.value.parse::<f32>().unwrap_or(0.0);
+        match field {
+            InputField::MainRotationX => rot_x = value,
+            InputField::MainRotationY => rot_y = value,
+            InputField::MainRotationZ => rot_z = value,
+            _ => {}
+        }
+    }
+
+    // Update main cube rotation
+    for mut transform in &mut main_query {
+        transform.rotation = Quat::from_euler(
+            EulerRot::XYZ,
+            rot_x.to_radians(),
+            rot_y.to_radians(),
+            rot_z.to_radians(),
+        );
     }
 }

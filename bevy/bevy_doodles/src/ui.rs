@@ -69,8 +69,9 @@ pub fn setup_ui(mut commands: Commands) {
                 });
         });
 
-    // Rotation input panel (bottom-left)
-    spawn_rotation_input_panel(&mut commands);
+    // Configuration panels (left side)
+    spawn_main_rotation_panel(&mut commands);
+    spawn_child_config_panel(&mut commands);
 }
 
 fn spawn_button(parent: &mut ChildSpawnerCommands, text: &str, button_type: RotationButton) {
@@ -133,7 +134,39 @@ pub fn handle_button_interaction(
     }
 }
 
-fn spawn_rotation_input_panel(commands: &mut Commands) {
+fn spawn_main_rotation_panel(commands: &mut Commands) {
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(UI_PADDING),
+                bottom: Val::Px(280.0), // Position above child panel
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(8.0),
+                padding: UiRect::all(Val::Px(15.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+        ))
+        .with_children(|panel: &mut ChildSpawnerCommands| {
+            // Title
+            panel.spawn((
+                Text::new("Main Cube Rotation"),
+                TextFont {
+                    font_size: 16.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+            ));
+
+            // Rotation inputs
+            spawn_input_row(panel, "X:", "0.0", InputField::MainRotationX);
+            spawn_input_row(panel, "Y:", "0.0", InputField::MainRotationY);
+            spawn_input_row(panel, "Z:", "0.0", InputField::MainRotationZ);
+        });
+}
+
+fn spawn_child_config_panel(commands: &mut Commands) {
     commands
         .spawn((
             Node {

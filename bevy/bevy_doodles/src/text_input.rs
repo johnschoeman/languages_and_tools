@@ -12,6 +12,9 @@ pub struct TextInput {
 
 #[derive(Component)]
 pub enum InputField {
+    MainRotationX,
+    MainRotationY,
+    MainRotationZ,
     ChildRotationX,
     ChildRotationY,
     ChildRotationZ,
