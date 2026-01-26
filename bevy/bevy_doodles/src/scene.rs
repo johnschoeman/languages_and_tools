@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::pbr::wireframe::{Wireframe, WireframeColor};
 use crate::text_input::{TextInput, InputField};
 
 // Rotation constants
@@ -13,8 +14,12 @@ const SECOND_CUBE_X_OFFSET: f32 = 0.8;
 const SECOND_CUBE_ROTATION_DEGREES: f32 = 45.0;
 
 // Color constants
-const FIRST_CUBE_COLOR: (f32, f32, f32) = (0.8, 0.7, 0.6);
-const SECOND_CUBE_COLOR: (f32, f32, f32) = (0.6, 0.7, 0.8);
+const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7); // Light gray
+const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.4, 0.4); // Darker gray
+const WIREFRAME_COLOR: (f32, f32, f32) = (0.1, 0.1, 0.1); // Dark edge color
+
+// Wireframe constants
+const WIREFRAME_SCALE: f32 = 1.002; // Slightly larger to be visible over solid mesh
 
 // Light constants
 const LIGHT_POSITION: (f32, f32, f32) = (-4.0, 6.0, 4.0);
@@ -47,14 +52,24 @@ pub fn setup(
     // Main/central cube - this is the parent that everything rotates around
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
-        MeshMaterial3d(materials.add(Color::srgb(FIRST_CUBE_COLOR.0, FIRST_CUBE_COLOR.1, FIRST_CUBE_COLOR.2))),
+        MeshMaterial3d(materials.add(Color::srgb(MAIN_CUBE_COLOR.0, MAIN_CUBE_COLOR.1, MAIN_CUBE_COLOR.2))),
         Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0),
         RotatingCube,
     )).with_children(|parent| {
+        // Wireframe edges for main cube
+        parent.spawn((
+            Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
+            Transform::from_scale(Vec3::splat(WIREFRAME_SCALE)),
+            Wireframe,
+            WireframeColor {
+                color: Color::srgb(WIREFRAME_COLOR.0, WIREFRAME_COLOR.1, WIREFRAME_COLOR.2),
+            },
+        ));
+
         // Leaf cube - attached to main cube
         parent.spawn((
             Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
-            MeshMaterial3d(materials.add(Color::srgb(SECOND_CUBE_COLOR.0, SECOND_CUBE_COLOR.1, SECOND_CUBE_COLOR.2))),
+            MeshMaterial3d(materials.add(Color::srgb(LEAF_CUBE_COLOR.0, LEAF_CUBE_COLOR.1, LEAF_CUBE_COLOR.2))),
             Transform::from_xyz(SECOND_CUBE_X_OFFSET, 0.0, 0.0)
                 .with_rotation(Quat::from_euler(
                     EulerRot::XYZ,
@@ -63,7 +78,17 @@ pub fn setup(
                     0.0
                 )),
             LeafCube,
-        ));
+        )).with_children(|leaf_parent| {
+            // Wireframe edges for leaf cube
+            leaf_parent.spawn((
+                Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
+                Transform::from_scale(Vec3::splat(WIREFRAME_SCALE)),
+                Wireframe,
+                WireframeColor {
+                    color: Color::srgb(WIREFRAME_COLOR.0, WIREFRAME_COLOR.1, WIREFRAME_COLOR.2),
+                },
+            ));
+        });
     });
 
     // Light
