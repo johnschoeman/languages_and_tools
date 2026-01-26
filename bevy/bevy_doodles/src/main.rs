@@ -16,13 +16,27 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Cube
+    // Parent entity for rigid rotation
     commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.6))),
         Transform::from_xyz(0.0, 0.5, 0.0),
+        Visibility::default(),
         RotatingCube,
-    ));
+    )).with_children(|parent| {
+        // First cube
+        parent.spawn((
+            Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+            MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.6))),
+            Transform::from_xyz(0.0, 0.0, 0.0),
+        ));
+
+        // Second cube - rotated 45 degrees on X and Y, offset for 1/5 overlap
+        parent.spawn((
+            Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+            MeshMaterial3d(materials.add(Color::srgb(0.6, 0.7, 0.8))),
+            Transform::from_xyz(0.8, 0.0, 0.0)
+                .with_rotation(Quat::from_euler(EulerRot::XYZ, 45f32.to_radians(), 45f32.to_radians(), 0.0)),
+        ));
+    });
 
     // Light
     commands.spawn((
