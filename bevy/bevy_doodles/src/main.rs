@@ -1,5 +1,6 @@
 use bevy::{
     app::AppExit,
+    color::palettes::css,
     prelude::*,
     render::view::screenshot::{save_to_disk, Screenshot},
 };
@@ -35,12 +36,17 @@ const BUTTON_FONT_SIZE: f32 = 18.0;
 const BUTTON_BG_COLOR: (f32, f32, f32) = (0.15, 0.15, 0.15);
 const BUTTON_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 
+// Debug constants
+const AXIS_LENGTH: f32 = 2.0;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_resource::<AutoRotation>()
-        .add_systems(Startup, (setup, setup_ui))
+        .init_resource::<DebugMode>()
+        .add_systems(Startup, (setup, setup_ui, setup_debug_ui))
         .add_systems(Update, (rotate_cube, handle_button_interaction, screenshot_on_f12))
+        .add_systems(Update, (toggle_debug_mode, draw_debug_axes, update_debug_text))
         .add_systems(Update, auto_screenshot)
         .run();
 }
@@ -50,17 +56,24 @@ struct AutoRotation {
     enabled: bool,
 }
 
+#[derive(Resource)]
+struct DebugMode {
+    enabled: bool,
+}
+
 #[derive(Component)]
 struct RotatingCube;
 
 #[derive(Component)]
 enum RotationButton {
-    Left,
-    Right,
-    Up,
-    Down,
     ToggleAuto,
     Reset,
+    PlusX,
+    MinusX,
+    PlusY,
+    MinusY,
+    PlusZ,
+    MinusZ,
 }
 
 impl Default for AutoRotation {
@@ -68,6 +81,17 @@ impl Default for AutoRotation {
         Self { enabled: false }
     }
 }
+
+impl Default for DebugMode {
+    fn default() -> Self {
+        // Enable debug mode if AUTO_DEBUG env var is set
+        let enabled = std::env::var("AUTO_DEBUG").is_ok();
+        Self { enabled }
+    }
+}
+
+#[derive(Component)]
+struct DebugText;
 
 fn setup(
     mut commands: Commands,
@@ -131,12 +155,27 @@ fn setup_ui(mut commands: Commands) {
                     ..default()
                 })
                 .with_children(|panel| {
-                    spawn_button(panel, "⬆ Up (W)", RotationButton::Up);
-                    spawn_button(panel, "⬇ Down (S)", RotationButton::Down);
-                    spawn_button(panel, "⬅ Left (A)", RotationButton::Left);
-                    spawn_button(panel, "➡ Right (D)", RotationButton::Right);
                     spawn_button(panel, "⏯ Auto (Space)", RotationButton::ToggleAuto);
                     spawn_button(panel, "↺ Reset (R)", RotationButton::Reset);
+                });
+
+            // Right side button panel for individual axis rotation
+            parent
+                .spawn(Node {
+                    position_type: PositionType::Absolute,
+                    right: Val::Px(UI_PADDING),
+                    top: Val::Px(UI_PADDING),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(BUTTON_SPACING),
+                    ..default()
+                })
+                .with_children(|panel| {
+                    spawn_button(panel, "+X (J)", RotationButton::PlusX);
+                    spawn_button(panel, "-X (U)", RotationButton::MinusX);
+                    spawn_button(panel, "+Y (K)", RotationButton::PlusY);
+                    spawn_button(panel, "-Y (I)", RotationButton::MinusY);
+                    spawn_button(panel, "+Z (L)", RotationButton::PlusZ);
+                    spawn_button(panel, "-Z (O)", RotationButton::MinusZ);
                 });
         });
 }
@@ -186,10 +225,12 @@ fn handle_button_interaction(
                 _ => {
                     for mut transform in &mut cube_query {
                         match button_type {
-                            RotationButton::Left => transform.rotate_y(BUTTON_ROTATION_AMOUNT),
-                            RotationButton::Right => transform.rotate_y(-BUTTON_ROTATION_AMOUNT),
-                            RotationButton::Up => transform.rotate_x(BUTTON_ROTATION_AMOUNT),
-                            RotationButton::Down => transform.rotate_x(-BUTTON_ROTATION_AMOUNT),
+                            RotationButton::PlusX => transform.rotate_local_x(BUTTON_ROTATION_AMOUNT),
+                            RotationButton::MinusX => transform.rotate_local_x(-BUTTON_ROTATION_AMOUNT),
+                            RotationButton::PlusY => transform.rotate_local_y(BUTTON_ROTATION_AMOUNT),
+                            RotationButton::MinusY => transform.rotate_local_y(-BUTTON_ROTATION_AMOUNT),
+                            RotationButton::PlusZ => transform.rotate_local_z(BUTTON_ROTATION_AMOUNT),
+                            RotationButton::MinusZ => transform.rotate_local_z(-BUTTON_ROTATION_AMOUNT),
                             RotationButton::ToggleAuto | RotationButton::Reset => {}
                         }
                     }
@@ -227,18 +268,110 @@ fn rotate_cube(
             transform.rotate_x(time.delta_secs() * AUTO_ROTATION_SPEED_X);
         }
 
-        // Keyboard controls (work alongside automatic rotation)
-        if keyboard.pressed(KeyCode::ArrowLeft) || keyboard.pressed(KeyCode::KeyA) {
-            transform.rotate_y(keyboard_delta);
+        // Individual axis controls
+        if keyboard.pressed(KeyCode::KeyJ) {
+            transform.rotate_local_x(keyboard_delta);
         }
-        if keyboard.pressed(KeyCode::ArrowRight) || keyboard.pressed(KeyCode::KeyD) {
-            transform.rotate_y(-keyboard_delta);
+        if keyboard.pressed(KeyCode::KeyU) {
+            transform.rotate_local_x(-keyboard_delta);
         }
-        if keyboard.pressed(KeyCode::ArrowUp) || keyboard.pressed(KeyCode::KeyW) {
-            transform.rotate_x(keyboard_delta);
+        if keyboard.pressed(KeyCode::KeyK) {
+            transform.rotate_local_y(keyboard_delta);
         }
-        if keyboard.pressed(KeyCode::ArrowDown) || keyboard.pressed(KeyCode::KeyS) {
-            transform.rotate_x(-keyboard_delta);
+        if keyboard.pressed(KeyCode::KeyI) {
+            transform.rotate_local_y(-keyboard_delta);
+        }
+        if keyboard.pressed(KeyCode::KeyL) {
+            transform.rotate_local_z(keyboard_delta);
+        }
+        if keyboard.pressed(KeyCode::KeyO) {
+            transform.rotate_local_z(-keyboard_delta);
+        }
+    }
+}
+
+fn setup_debug_ui(mut commands: Commands) {
+    // Debug info panel (bottom-right corner)
+    commands
+        .spawn(Node {
+            position_type: PositionType::Absolute,
+            right: Val::Px(UI_PADDING),
+            bottom: Val::Px(UI_PADDING),
+            padding: UiRect::all(Val::Px(10.0)),
+            ..default()
+        })
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("Debug: Press D"),
+                TextFont {
+                    font_size: 16.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.8, 0.8, 0.8)),
+                DebugText,
+            ));
+        });
+}
+
+fn toggle_debug_mode(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut debug_mode: ResMut<DebugMode>,
+) {
+    if keyboard.just_pressed(KeyCode::KeyD) {
+        debug_mode.enabled = !debug_mode.enabled;
+        info!("Debug mode: {}", if debug_mode.enabled { "ON" } else { "OFF" });
+    }
+}
+
+fn draw_debug_axes(
+    mut gizmos: Gizmos,
+    debug_mode: Res<DebugMode>,
+) {
+    if !debug_mode.enabled {
+        return;
+    }
+
+    // Draw coordinate axes
+    // X-axis (Red)
+    gizmos.line(Vec3::ZERO, Vec3::X * AXIS_LENGTH, css::RED);
+    // Y-axis (Green)
+    gizmos.line(Vec3::ZERO, Vec3::Y * AXIS_LENGTH, css::GREEN);
+    // Z-axis (Blue)
+    gizmos.line(Vec3::ZERO, Vec3::Z * AXIS_LENGTH, css::BLUE);
+}
+
+fn update_debug_text(
+    debug_mode: Res<DebugMode>,
+    cube_query: Query<&Transform, With<RotatingCube>>,
+    mut text_query: Query<(&mut Text, &mut Visibility), With<DebugText>>,
+) {
+    for (mut text, mut visibility) in &mut text_query {
+        if debug_mode.enabled {
+            *visibility = Visibility::Visible;
+
+            if let Ok(transform) = cube_query.single() {
+                let (axis, angle): (Vec3, f32) = transform.rotation.to_axis_angle();
+                let euler = transform.rotation.to_euler(EulerRot::XYZ);
+
+                **text = format!(
+                    "Debug Mode (D)\n\
+                    Rotation (Euler XYZ):\n\
+                    X: {:.1}°\n\
+                    Y: {:.1}°\n\
+                    Z: {:.1}°\n\
+                    \n\
+                    Axis-Angle:\n\
+                    Axis: ({:.2}, {:.2}, {:.2})\n\
+                    Angle: {:.1}°",
+                    euler.0.to_degrees(),
+                    euler.1.to_degrees(),
+                    euler.2.to_degrees(),
+                    axis.x, axis.y, axis.z,
+                    angle.to_degrees()
+                );
+            }
+        } else {
+            *visibility = Visibility::Hidden;
         }
     }
 }
