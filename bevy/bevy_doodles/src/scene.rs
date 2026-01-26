@@ -138,10 +138,13 @@ pub fn apply_child_rotation_from_inputs(
     parent_query: Query<&Children, With<RotatingCube>>,
     mut child_query: Query<&mut Transform, With<ChildCube>>,
 ) {
-    // Collect rotation values from inputs
+    // Collect rotation and translation values from inputs
     let mut rot_x = 0.0;
     let mut rot_y = 0.0;
     let mut rot_z = 0.0;
+    let mut trans_x = 0.0;
+    let mut trans_y = 0.0;
+    let mut trans_z = 0.0;
 
     for (field, input) in &input_query {
         let value = input.value.parse::<f32>().unwrap_or(0.0);
@@ -149,10 +152,13 @@ pub fn apply_child_rotation_from_inputs(
             InputField::ChildRotationX => rot_x = value,
             InputField::ChildRotationY => rot_y = value,
             InputField::ChildRotationZ => rot_z = value,
+            InputField::ChildTranslationX => trans_x = value,
+            InputField::ChildTranslationY => trans_y = value,
+            InputField::ChildTranslationZ => trans_z = value,
         }
     }
 
-    // Find the child cube and update its rotation
+    // Find the child cube and update its rotation and translation
     for children in &parent_query {
         for child in children.iter() {
             if let Ok(mut transform) = child_query.get_mut(child) {
@@ -162,6 +168,7 @@ pub fn apply_child_rotation_from_inputs(
                     rot_y.to_radians(),
                     rot_z.to_radians(),
                 );
+                transform.translation = Vec3::new(trans_x, trans_y, trans_z);
             }
         }
     }

@@ -15,6 +15,9 @@ pub enum InputField {
     ChildRotationX,
     ChildRotationY,
     ChildRotationZ,
+    ChildTranslationX,
+    ChildTranslationY,
+    ChildTranslationZ,
 }
 
 #[derive(Resource, Default)]
