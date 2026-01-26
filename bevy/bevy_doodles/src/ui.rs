@@ -14,6 +14,26 @@ const BUTTON_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 // Button rotation amount
 const BUTTON_ROTATION_AMOUNT: f32 = 0.1;
 
+// Input panel constants
+const PANEL_BG_COLOR: (f32, f32, f32) = (0.1, 0.1, 0.1);
+const PANEL_PADDING: f32 = 15.0;
+const PANEL_ROW_GAP: f32 = 8.0;
+const MAIN_PANEL_BOTTOM_OFFSET: f32 = 280.0;
+
+// Input field constants
+const INPUT_WIDTH: f32 = 80.0;
+const INPUT_HEIGHT: f32 = 30.0;
+const INPUT_PADDING: f32 = 5.0;
+const INPUT_BG_COLOR: (f32, f32, f32) = (0.15, 0.15, 0.15);
+const INPUT_COLUMN_GAP: f32 = 8.0;
+
+// Text constants
+const PANEL_TITLE_FONT_SIZE: f32 = 16.0;
+const SECTION_HEADER_FONT_SIZE: f32 = 14.0;
+const INPUT_FONT_SIZE: f32 = 14.0;
+const TITLE_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
+const SECTION_TEXT_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7);
+
 #[derive(Component)]
 pub enum RotationButton {
     ToggleAuto,
@@ -140,23 +160,23 @@ fn spawn_main_rotation_panel(commands: &mut Commands) {
             Node {
                 position_type: PositionType::Absolute,
                 left: Val::Px(UI_PADDING),
-                bottom: Val::Px(280.0), // Position above child panel
+                bottom: Val::Px(MAIN_PANEL_BOTTOM_OFFSET),
                 flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(8.0),
-                padding: UiRect::all(Val::Px(15.0)),
+                row_gap: Val::Px(PANEL_ROW_GAP),
+                padding: UiRect::all(Val::Px(PANEL_PADDING)),
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+            BackgroundColor(Color::srgb(PANEL_BG_COLOR.0, PANEL_BG_COLOR.1, PANEL_BG_COLOR.2)),
         ))
         .with_children(|panel: &mut ChildSpawnerCommands| {
             // Title
             panel.spawn((
                 Text::new("Main Cube Rotation"),
                 TextFont {
-                    font_size: 16.0,
+                    font_size: PANEL_TITLE_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                TextColor(Color::srgb(TITLE_TEXT_COLOR.0, TITLE_TEXT_COLOR.1, TITLE_TEXT_COLOR.2)),
             ));
 
             // Rotation inputs
@@ -174,31 +194,31 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 left: Val::Px(UI_PADDING),
                 bottom: Val::Px(UI_PADDING),
                 flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(8.0),
-                padding: UiRect::all(Val::Px(15.0)),
+                row_gap: Val::Px(PANEL_ROW_GAP),
+                padding: UiRect::all(Val::Px(PANEL_PADDING)),
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+            BackgroundColor(Color::srgb(PANEL_BG_COLOR.0, PANEL_BG_COLOR.1, PANEL_BG_COLOR.2)),
         ))
         .with_children(|panel: &mut ChildSpawnerCommands| {
             // Title
             panel.spawn((
                 Text::new("Child Cube Configuration"),
                 TextFont {
-                    font_size: 16.0,
+                    font_size: PANEL_TITLE_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                TextColor(Color::srgb(TITLE_TEXT_COLOR.0, TITLE_TEXT_COLOR.1, TITLE_TEXT_COLOR.2)),
             ));
 
             // Rotation section
             panel.spawn((
                 Text::new("Rotation"),
                 TextFont {
-                    font_size: 14.0,
+                    font_size: SECTION_HEADER_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.7, 0.7, 0.7)),
+                TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
             spawn_input_row(panel, "X:", "0.0", InputField::ChildRotationX);
             spawn_input_row(panel, "Y:", "45.0", InputField::ChildRotationY);
@@ -208,10 +228,10 @@ fn spawn_child_config_panel(commands: &mut Commands) {
             panel.spawn((
                 Text::new("Position"),
                 TextFont {
-                    font_size: 14.0,
+                    font_size: SECTION_HEADER_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.7, 0.7, 0.7)),
+                TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
             spawn_input_row(panel, "X:", "0.9", InputField::ChildTranslationX);
             spawn_input_row(panel, "Y:", "0.0", InputField::ChildTranslationY);
@@ -223,7 +243,7 @@ fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str
     parent
         .spawn(Node {
             flex_direction: FlexDirection::Row,
-            column_gap: Val::Px(8.0),
+            column_gap: Val::Px(INPUT_COLUMN_GAP),
             align_items: AlignItems::Center,
             ..default()
         })
@@ -232,24 +252,24 @@ fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str
             row.spawn((
                 Text::new(label),
                 TextFont {
-                    font_size: 14.0,
+                    font_size: INPUT_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                TextColor(Color::srgb(TITLE_TEXT_COLOR.0, TITLE_TEXT_COLOR.1, TITLE_TEXT_COLOR.2)),
             ));
 
             // Input field
             row.spawn((
                 Button,
                 Node {
-                    width: Val::Px(80.0),
-                    height: Val::Px(30.0),
-                    padding: UiRect::all(Val::Px(5.0)),
+                    width: Val::Px(INPUT_WIDTH),
+                    height: Val::Px(INPUT_HEIGHT),
+                    padding: UiRect::all(Val::Px(INPUT_PADDING)),
                     justify_content: JustifyContent::FlexStart,
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
+                BackgroundColor(Color::srgb(INPUT_BG_COLOR.0, INPUT_BG_COLOR.1, INPUT_BG_COLOR.2)),
                 TextInput {
                     value: initial.to_string(),
                     is_focused: false,
@@ -262,10 +282,10 @@ fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str
                 input.spawn((
                     Text::new(initial),
                     TextFont {
-                        font_size: 14.0,
+                        font_size: INPUT_FONT_SIZE,
                         ..default()
                     },
-                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                    TextColor(Color::srgb(TITLE_TEXT_COLOR.0, TITLE_TEXT_COLOR.1, TITLE_TEXT_COLOR.2)),
                 ));
             });
 
@@ -273,10 +293,10 @@ fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str
             row.spawn((
                 Text::new("degrees"),
                 TextFont {
-                    font_size: 14.0,
+                    font_size: INPUT_FONT_SIZE,
                     ..default()
                 },
-                TextColor(Color::srgb(0.7, 0.7, 0.7)),
+                TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
         });
 }
