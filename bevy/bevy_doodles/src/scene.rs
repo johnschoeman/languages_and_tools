@@ -37,7 +37,7 @@ impl Default for AutoRotation {
 pub struct RotatingCube;
 
 #[derive(Component)]
-pub struct ChildCube;
+pub struct LeafCube;
 
 pub fn setup(
     mut commands: Commands,
@@ -51,7 +51,7 @@ pub fn setup(
         Transform::from_xyz(0.0, CUBE_Y_POSITION, 0.0),
         RotatingCube,
     )).with_children(|parent| {
-        // Second cube - attached as child
+        // Leaf cube - attached to main cube
         parent.spawn((
             Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
             MeshMaterial3d(materials.add(Color::srgb(SECOND_CUBE_COLOR.0, SECOND_CUBE_COLOR.1, SECOND_CUBE_COLOR.2))),
@@ -62,7 +62,7 @@ pub fn setup(
                     SECOND_CUBE_ROTATION_DEGREES.to_radians(),
                     0.0
                 )),
-            ChildCube,
+            LeafCube,
         ));
     });
 
@@ -133,10 +133,10 @@ pub fn rotate_cube(
     }
 }
 
-pub fn apply_child_rotation_from_inputs(
+pub fn apply_leaf_rotation_from_inputs(
     input_query: Query<(&InputField, &TextInput)>,
     parent_query: Query<&Children, With<RotatingCube>>,
-    mut child_query: Query<&mut Transform, With<ChildCube>>,
+    mut leaf_query: Query<&mut Transform, With<LeafCube>>,
 ) {
     // Collect rotation and translation values from inputs
     let mut rot_x = 0.0;
@@ -149,20 +149,20 @@ pub fn apply_child_rotation_from_inputs(
     for (field, input) in &input_query {
         let value = input.value.parse::<f32>().unwrap_or(0.0);
         match field {
-            InputField::ChildRotationX => rot_x = value,
-            InputField::ChildRotationY => rot_y = value,
-            InputField::ChildRotationZ => rot_z = value,
-            InputField::ChildTranslationX => trans_x = value,
-            InputField::ChildTranslationY => trans_y = value,
-            InputField::ChildTranslationZ => trans_z = value,
+            InputField::LeafRotationX => rot_x = value,
+            InputField::LeafRotationY => rot_y = value,
+            InputField::LeafRotationZ => rot_z = value,
+            InputField::LeafTranslationX => trans_x = value,
+            InputField::LeafTranslationY => trans_y = value,
+            InputField::LeafTranslationZ => trans_z = value,
             _ => {}
         }
     }
 
-    // Find the child cube and update its rotation and translation
+    // Find the leaf cube and update its rotation and translation
     for children in &parent_query {
         for child in children.iter() {
-            if let Ok(mut transform) = child_query.get_mut(child) {
+            if let Ok(mut transform) = leaf_query.get_mut(child) {
                 transform.rotation = Quat::from_euler(
                     EulerRot::XYZ,
                     rot_x.to_radians(),

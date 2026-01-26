@@ -39,24 +39,24 @@ struct CubeConfig {
     main_rotation_x: f32,
     main_rotation_y: f32,
     main_rotation_z: f32,
-    child_rotation_x: f32,
-    child_rotation_y: f32,
-    child_rotation_z: f32,
-    child_position_x: f32,
-    child_position_y: f32,
-    child_position_z: f32,
+    leaf_rotation_x: f32,
+    leaf_rotation_y: f32,
+    leaf_rotation_z: f32,
+    leaf_position_x: f32,
+    leaf_position_y: f32,
+    leaf_position_z: f32,
 }
 
 const CUBE_CONFIG: CubeConfig = CubeConfig {
     main_rotation_x: 115.0,
     main_rotation_y: 0.0,
     main_rotation_z: -45.0,
-    child_rotation_x: 0.0,
-    child_rotation_y: 45.0,
-    child_rotation_z: 45.0,
-    child_position_x: 0.9,
-    child_position_y: 0.0,
-    child_position_z: -0.9,
+    leaf_rotation_x: 0.0,
+    leaf_rotation_y: 45.0,
+    leaf_rotation_z: 45.0,
+    leaf_position_x: 0.9,
+    leaf_position_y: 0.0,
+    leaf_position_z: -0.9,
 };
 
 #[derive(Component)]
@@ -116,7 +116,7 @@ pub fn setup_ui(mut commands: Commands) {
 
     // Configuration panels (left side)
     spawn_main_rotation_panel(&mut commands);
-    spawn_child_config_panel(&mut commands);
+    spawn_leaf_config_panel(&mut commands);
 }
 
 fn spawn_button(parent: &mut ChildSpawnerCommands, text: &str, button_type: RotationButton) {
@@ -211,7 +211,7 @@ fn spawn_main_rotation_panel(commands: &mut Commands) {
         });
 }
 
-fn spawn_child_config_panel(commands: &mut Commands) {
+fn spawn_leaf_config_panel(commands: &mut Commands) {
     commands
         .spawn((
             Node {
@@ -228,7 +228,7 @@ fn spawn_child_config_panel(commands: &mut Commands) {
         .with_children(|panel: &mut ChildSpawnerCommands| {
             // Title
             panel.spawn((
-                Text::new("Child Cube Configuration"),
+                Text::new("Leaf Cube Configuration"),
                 TextFont {
                     font_size: PANEL_TITLE_FONT_SIZE,
                     ..default()
@@ -245,9 +245,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
-            spawn_input_row(panel, "X:", &CUBE_CONFIG.child_rotation_x.to_string(), InputField::ChildRotationX);
-            spawn_input_row(panel, "Y:", &CUBE_CONFIG.child_rotation_y.to_string(), InputField::ChildRotationY);
-            spawn_input_row(panel, "Z:", &CUBE_CONFIG.child_rotation_z.to_string(), InputField::ChildRotationZ);
+            spawn_input_row(panel, "X:", &CUBE_CONFIG.leaf_rotation_x.to_string(), InputField::LeafRotationX);
+            spawn_input_row(panel, "Y:", &CUBE_CONFIG.leaf_rotation_y.to_string(), InputField::LeafRotationY);
+            spawn_input_row(panel, "Z:", &CUBE_CONFIG.leaf_rotation_z.to_string(), InputField::LeafRotationZ);
 
             // Translation section
             panel.spawn((
@@ -258,9 +258,9 @@ fn spawn_child_config_panel(commands: &mut Commands) {
                 },
                 TextColor(Color::srgb(SECTION_TEXT_COLOR.0, SECTION_TEXT_COLOR.1, SECTION_TEXT_COLOR.2)),
             ));
-            spawn_input_row(panel, "X:", &CUBE_CONFIG.child_position_x.to_string(), InputField::ChildTranslationX);
-            spawn_input_row(panel, "Y:", &CUBE_CONFIG.child_position_y.to_string(), InputField::ChildTranslationY);
-            spawn_input_row(panel, "Z:", &CUBE_CONFIG.child_position_z.to_string(), InputField::ChildTranslationZ);
+            spawn_input_row(panel, "X:", &CUBE_CONFIG.leaf_position_x.to_string(), InputField::LeafTranslationX);
+            spawn_input_row(panel, "Y:", &CUBE_CONFIG.leaf_position_y.to_string(), InputField::LeafTranslationY);
+            spawn_input_row(panel, "Z:", &CUBE_CONFIG.leaf_position_z.to_string(), InputField::LeafTranslationZ);
         });
 }
 
