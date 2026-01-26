@@ -17,10 +17,10 @@ const FIRST_CUBE_COLOR: (f32, f32, f32) = (0.8, 0.7, 0.6);
 const SECOND_CUBE_COLOR: (f32, f32, f32) = (0.6, 0.7, 0.8);
 
 // Light constants
-const LIGHT_POSITION: (f32, f32, f32) = (3.0, 6.0, -4.0);
+const LIGHT_POSITION: (f32, f32, f32) = (3.0, 6.0, 4.0);
 
 // Camera constants
-const CAMERA_POSITION: (f32, f32, f32) = (0.0, 0.5, -8.0);
+const CAMERA_POSITION: (f32, f32, f32) = (0.0, 0.5, 8.0);
 
 #[derive(Resource)]
 pub struct AutoRotation {

@@ -168,8 +168,8 @@ fn spawn_rotation_input_panel(commands: &mut Commands) {
                 TextColor(Color::srgb(0.7, 0.7, 0.7)),
             ));
             spawn_input_row(panel, "X:", "45.0", InputField::ChildRotationX);
-            spawn_input_row(panel, "Y:", "45.0", InputField::ChildRotationY);
-            spawn_input_row(panel, "Z:", "0.0", InputField::ChildRotationZ);
+            spawn_input_row(panel, "Y:", "22.5", InputField::ChildRotationY);
+            spawn_input_row(panel, "Z:", "22.5", InputField::ChildRotationZ);
 
             // Translation section
             panel.spawn((
@@ -181,7 +181,7 @@ fn spawn_rotation_input_panel(commands: &mut Commands) {
                 TextColor(Color::srgb(0.7, 0.7, 0.7)),
             ));
             spawn_input_row(panel, "X:", "0.8", InputField::ChildTranslationX);
-            spawn_input_row(panel, "Y:", "0.0", InputField::ChildTranslationY);
+            spawn_input_row(panel, "Y:", "-1.0", InputField::ChildTranslationY);
             spawn_input_row(panel, "Z:", "0.0", InputField::ChildTranslationZ);
         });
 }
