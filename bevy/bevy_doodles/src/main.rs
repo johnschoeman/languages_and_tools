@@ -3,6 +3,8 @@ use bevy::prelude::*;
 // Rotation constants
 const KEYBOARD_ROTATION_SPEED: f32 = 2.0;
 const BUTTON_ROTATION_AMOUNT: f32 = 0.1;
+const AUTO_ROTATION_SPEED_Y: f32 = 1.0;
+const AUTO_ROTATION_SPEED_X: f32 = 0.5;
 
 // Cube constants
 const CUBE_SIZE: f32 = 1.0;
@@ -32,9 +34,15 @@ const BUTTON_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .init_resource::<AutoRotation>()
         .add_systems(Startup, (setup, setup_ui))
         .add_systems(Update, (rotate_cube, handle_button_interaction))
         .run();
+}
+
+#[derive(Resource)]
+struct AutoRotation {
+    enabled: bool,
 }
 
 #[derive(Component)]
@@ -46,6 +54,13 @@ enum RotationButton {
     Right,
     Up,
     Down,
+    ToggleAuto,
+}
+
+impl Default for AutoRotation {
+    fn default() -> Self {
+        Self { enabled: false }
+    }
 }
 
 fn setup(
@@ -120,6 +135,7 @@ fn setup_ui(mut commands: Commands) {
                     spawn_button(panel, "⬇ Down (S)", RotationButton::Down);
                     spawn_button(panel, "⬅ Left (A)", RotationButton::Left);
                     spawn_button(panel, "➡ Right (D)", RotationButton::Right);
+                    spawn_button(panel, "⏯ Auto (Space)", RotationButton::ToggleAuto);
                 });
         });
 }
@@ -153,16 +169,24 @@ fn spawn_button(parent: &mut ChildSpawnerCommands, text: &str, button_type: Rota
 fn handle_button_interaction(
     interaction_query: Query<(&Interaction, &RotationButton), Changed<Interaction>>,
     mut cube_query: Query<&mut Transform, With<RotatingCube>>,
+    mut auto_rotation: ResMut<AutoRotation>,
 ) {
-
     for (interaction, button_type) in &interaction_query {
         if *interaction == Interaction::Pressed {
-            for mut transform in &mut cube_query {
-                match button_type {
-                    RotationButton::Left => transform.rotate_y(BUTTON_ROTATION_AMOUNT),
-                    RotationButton::Right => transform.rotate_y(-BUTTON_ROTATION_AMOUNT),
-                    RotationButton::Up => transform.rotate_x(BUTTON_ROTATION_AMOUNT),
-                    RotationButton::Down => transform.rotate_x(-BUTTON_ROTATION_AMOUNT),
+            match button_type {
+                RotationButton::ToggleAuto => {
+                    auto_rotation.enabled = !auto_rotation.enabled;
+                }
+                _ => {
+                    for mut transform in &mut cube_query {
+                        match button_type {
+                            RotationButton::Left => transform.rotate_y(BUTTON_ROTATION_AMOUNT),
+                            RotationButton::Right => transform.rotate_y(-BUTTON_ROTATION_AMOUNT),
+                            RotationButton::Up => transform.rotate_x(BUTTON_ROTATION_AMOUNT),
+                            RotationButton::Down => transform.rotate_x(-BUTTON_ROTATION_AMOUNT),
+                            RotationButton::ToggleAuto => {}
+                        }
+                    }
                 }
             }
         }
@@ -172,25 +196,35 @@ fn handle_button_interaction(
 fn rotate_cube(
     keyboard: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
+    mut auto_rotation: ResMut<AutoRotation>,
     mut query: Query<&mut Transform, With<RotatingCube>>,
 ) {
-    let delta = time.delta_secs() * KEYBOARD_ROTATION_SPEED;
+    // Toggle auto-rotation with space bar
+    if keyboard.just_pressed(KeyCode::Space) {
+        auto_rotation.enabled = !auto_rotation.enabled;
+    }
+
+    let keyboard_delta = time.delta_secs() * KEYBOARD_ROTATION_SPEED;
 
     for mut transform in &mut query {
-        // Left/Right or A/D for Y-axis rotation
-        if keyboard.pressed(KeyCode::ArrowLeft) || keyboard.pressed(KeyCode::KeyA) {
-            transform.rotate_y(delta);
-        }
-        if keyboard.pressed(KeyCode::ArrowRight) || keyboard.pressed(KeyCode::KeyD) {
-            transform.rotate_y(-delta);
+        // Automatic rotation
+        if auto_rotation.enabled {
+            transform.rotate_y(time.delta_secs() * AUTO_ROTATION_SPEED_Y);
+            transform.rotate_x(time.delta_secs() * AUTO_ROTATION_SPEED_X);
         }
 
-        // Up/Down or W/S for X-axis rotation
+        // Keyboard controls (work alongside automatic rotation)
+        if keyboard.pressed(KeyCode::ArrowLeft) || keyboard.pressed(KeyCode::KeyA) {
+            transform.rotate_y(keyboard_delta);
+        }
+        if keyboard.pressed(KeyCode::ArrowRight) || keyboard.pressed(KeyCode::KeyD) {
+            transform.rotate_y(-keyboard_delta);
+        }
         if keyboard.pressed(KeyCode::ArrowUp) || keyboard.pressed(KeyCode::KeyW) {
-            transform.rotate_x(delta);
+            transform.rotate_x(keyboard_delta);
         }
         if keyboard.pressed(KeyCode::ArrowDown) || keyboard.pressed(KeyCode::KeyS) {
-            transform.rotate_x(-delta);
+            transform.rotate_x(-keyboard_delta);
         }
     }
 }
