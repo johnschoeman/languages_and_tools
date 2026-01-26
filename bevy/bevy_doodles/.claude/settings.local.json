@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nix develop:*)",
+      "Bash(./screenshot.sh:*)",
+      "WebSearch"
+    ]
+  }
+}
