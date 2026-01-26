@@ -45,6 +45,29 @@ Or run commands directly:
 nix develop -c cargo run
 ```
 
+## Verifying Visual Changes
+
+When making visual changes to the Bevy app, always create a screenshot to verify the output is correct. Claude can view and analyze screenshots.
+
+### Automated Screenshot
+
+Use the automated screenshot script to capture the current state:
+```bash
+./screenshot.sh
+```
+
+This will:
+- Build and run the app
+- Wait for the scene to render
+- Take a screenshot to `./tmp/bevy_screenshot_auto.png`
+- Exit automatically
+
+After running the script, use the Read tool to view the screenshot and verify visual changes.
+
+### Manual Screenshot
+
+During normal app operation, press **F12** to save a screenshot to `./tmp/bevy_screenshot_N.png` (where N is an incrementing counter).
+
 ## Project Structure
 
 - Basic Bevy app setup in `src/main.rs`

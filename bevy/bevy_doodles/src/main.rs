@@ -1,4 +1,8 @@
-use bevy::prelude::*;
+use bevy::{
+    app::AppExit,
+    prelude::*,
+    render::view::screenshot::{save_to_disk, Screenshot},
+};
 
 // Rotation constants
 const KEYBOARD_ROTATION_SPEED: f32 = 2.0;
@@ -36,7 +40,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .init_resource::<AutoRotation>()
         .add_systems(Startup, (setup, setup_ui))
-        .add_systems(Update, (rotate_cube, handle_button_interaction))
+        .add_systems(Update, (rotate_cube, handle_button_interaction, screenshot_on_f12))
+        .add_systems(Update, auto_screenshot)
         .run();
 }
 
@@ -235,5 +240,62 @@ fn rotate_cube(
         if keyboard.pressed(KeyCode::ArrowDown) || keyboard.pressed(KeyCode::KeyS) {
             transform.rotate_x(-keyboard_delta);
         }
+    }
+}
+
+fn screenshot_on_f12(
+    mut commands: Commands,
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut counter: Local<u32>,
+) {
+    if keyboard.just_pressed(KeyCode::F12) {
+        // Create tmp directory if it doesn't exist
+        if let Err(e) = std::fs::create_dir_all("./tmp") {
+            error!("Failed to create tmp directory: {}", e);
+            return;
+        }
+
+        let path = format!("./tmp/bevy_screenshot_{}.png", *counter);
+        *counter += 1;
+        info!("Taking screenshot: {}", path);
+        commands
+            .spawn(Screenshot::primary_window())
+            .observe(save_to_disk(path));
+    }
+}
+
+fn auto_screenshot(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut screenshot_taken: Local<bool>,
+    mut exit: MessageWriter<AppExit>,
+) {
+    // Check if AUTO_SCREENSHOT env var is set
+    if std::env::var("AUTO_SCREENSHOT").is_err() {
+        return;
+    }
+
+    // Wait 1 second for scene to render, then take screenshot
+    if !*screenshot_taken && time.elapsed_secs() > 1.0 {
+        *screenshot_taken = true;
+
+        if let Err(e) = std::fs::create_dir_all("./tmp") {
+            error!("Failed to create tmp directory: {}", e);
+            exit.write(AppExit::Error(std::num::NonZero::new(1).unwrap()));
+            return;
+        }
+
+        let path = "./tmp/bevy_screenshot_auto.png";
+        info!("Auto-screenshot mode: Taking screenshot to {}", path);
+
+        commands
+            .spawn(Screenshot::primary_window())
+            .observe(save_to_disk(path.to_string()));
+    }
+
+    // Exit after screenshot has been saved (give it 1.5 seconds total)
+    if *screenshot_taken && time.elapsed_secs() > 1.5 {
+        info!("Exiting after auto-screenshot");
+        exit.write(AppExit::Success);
     }
 }
