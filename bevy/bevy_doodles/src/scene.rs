@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::text_input::{TextInput, InputField};
 
 // Rotation constants
 const KEYBOARD_ROTATION_SPEED: f32 = 2.0;
@@ -35,6 +36,9 @@ impl Default for AutoRotation {
 #[derive(Component)]
 pub struct RotatingCube;
 
+#[derive(Component)]
+pub struct ChildCube;
+
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -58,6 +62,7 @@ pub fn setup(
                     SECOND_CUBE_ROTATION_DEGREES.to_radians(),
                     0.0
                 )),
+            ChildCube,
         ));
     });
 
@@ -124,6 +129,40 @@ pub fn rotate_cube(
         }
         if keyboard.pressed(KeyCode::KeyO) {
             transform.rotate_local_z(-keyboard_delta);
+        }
+    }
+}
+
+pub fn apply_child_rotation_from_inputs(
+    input_query: Query<(&InputField, &TextInput)>,
+    parent_query: Query<&Children, With<RotatingCube>>,
+    mut child_query: Query<&mut Transform, With<ChildCube>>,
+) {
+    // Collect rotation values from inputs
+    let mut rot_x = 0.0;
+    let mut rot_y = 0.0;
+    let mut rot_z = 0.0;
+
+    for (field, input) in &input_query {
+        let value = input.value.parse::<f32>().unwrap_or(0.0);
+        match field {
+            InputField::ChildRotationX => rot_x = value,
+            InputField::ChildRotationY => rot_y = value,
+            InputField::ChildRotationZ => rot_z = value,
+        }
+    }
+
+    // Find the child cube and update its rotation
+    for children in &parent_query {
+        for child in children.iter() {
+            if let Ok(mut transform) = child_query.get_mut(child) {
+                transform.rotation = Quat::from_euler(
+                    EulerRot::XYZ,
+                    rot_x.to_radians(),
+                    rot_y.to_radians(),
+                    rot_z.to_radians(),
+                );
+            }
         }
     }
 }

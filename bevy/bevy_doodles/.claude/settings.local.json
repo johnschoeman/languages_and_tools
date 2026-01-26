@@ -3,7 +3,10 @@
     "allow": [
       "Bash(nix develop:*)",
       "Bash(./screenshot.sh:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:bevy.org)",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:bevy-cheatbook.github.io)"
     ]
   }
 }

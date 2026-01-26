@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::scene::{AutoRotation, RotatingCube};
+use crate::text_input::{TextInput, InputField};
 
 // UI constants
 const UI_PADDING: f32 = 20.0;
@@ -67,6 +68,9 @@ pub fn setup_ui(mut commands: Commands) {
                     spawn_button(panel, "-Z (O)", RotationButton::MinusZ);
                 });
         });
+
+    // Rotation input panel (bottom-left)
+    spawn_rotation_input_panel(&mut commands);
 }
 
 fn spawn_button(parent: &mut ChildSpawnerCommands, text: &str, button_type: RotationButton) {
@@ -127,4 +131,98 @@ pub fn handle_button_interaction(
             }
         }
     }
+}
+
+fn spawn_rotation_input_panel(commands: &mut Commands) {
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(UI_PADDING),
+                bottom: Val::Px(UI_PADDING),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(8.0),
+                padding: UiRect::all(Val::Px(15.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+        ))
+        .with_children(|panel: &mut ChildSpawnerCommands| {
+            // Title
+            panel.spawn((
+                Text::new("Child Cube Rotation"),
+                TextFont {
+                    font_size: 16.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+            ));
+
+            // Input rows
+            spawn_input_row(panel, "X:", "45.0", InputField::ChildRotationX);
+            spawn_input_row(panel, "Y:", "45.0", InputField::ChildRotationY);
+            spawn_input_row(panel, "Z:", "0.0", InputField::ChildRotationZ);
+        });
+}
+
+fn spawn_input_row(parent: &mut ChildSpawnerCommands, label: &str, initial: &str, field_type: InputField) {
+    parent
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            column_gap: Val::Px(8.0),
+            align_items: AlignItems::Center,
+            ..default()
+        })
+        .with_children(|row| {
+            // Label
+            row.spawn((
+                Text::new(label),
+                TextFont {
+                    font_size: 14.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+            ));
+
+            // Input field
+            row.spawn((
+                Button,
+                Node {
+                    width: Val::Px(80.0),
+                    height: Val::Px(30.0),
+                    padding: UiRect::all(Val::Px(5.0)),
+                    justify_content: JustifyContent::FlexStart,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
+                TextInput {
+                    value: initial.to_string(),
+                    is_focused: false,
+                    cursor_visible: false,
+                    cursor_timer: 0.0,
+                },
+                field_type,
+            ))
+            .with_children(|input| {
+                input.spawn((
+                    Text::new(initial),
+                    TextFont {
+                        font_size: 14.0,
+                        ..default()
+                    },
+                    TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                ));
+            });
+
+            // "degrees" suffix
+            row.spawn((
+                Text::new("degrees"),
+                TextFont {
+                    font_size: 14.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.7, 0.7, 0.7)),
+            ));
+        });
 }

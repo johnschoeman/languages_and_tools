@@ -3,12 +3,17 @@ use bevy::prelude::*;
 mod scene;
 mod ui;
 mod debug;
+mod text_input;
 
-use scene::{AutoRotation, setup as setup_scene, rotate_cube};
+use scene::{AutoRotation, setup as setup_scene, rotate_cube, apply_child_rotation_from_inputs};
 use ui::{setup_ui, handle_button_interaction};
 use debug::{
     DebugMode, setup_debug_ui, toggle_debug_mode, draw_debug_axes,
     update_debug_text, screenshot_on_f12, auto_screenshot,
+};
+use text_input::{
+    InputFocusState, handle_text_input_focus, handle_keyboard_input,
+    update_cursor_blink, update_text_input_display,
 };
 
 fn main() {
@@ -16,9 +21,17 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .init_resource::<AutoRotation>()
         .init_resource::<DebugMode>()
+        .init_resource::<InputFocusState>()
         .add_systems(Startup, (setup_scene, setup_ui, setup_debug_ui))
         .add_systems(Update, (rotate_cube, handle_button_interaction, screenshot_on_f12))
         .add_systems(Update, (toggle_debug_mode, draw_debug_axes, update_debug_text))
+        .add_systems(Update, (
+            handle_text_input_focus,
+            handle_keyboard_input,
+            update_cursor_blink,
+            update_text_input_display,
+        ))
+        .add_systems(Update, apply_child_rotation_from_inputs)
         .add_systems(Update, auto_screenshot)
         .run();
 }
