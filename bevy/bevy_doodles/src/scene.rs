@@ -23,7 +23,7 @@ const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.08, 0.15); // Deep burgundy
 const LIGHT_POSITION: (f32, f32, f32) = (-4.0, 6.0, 4.0);
 
 // Camera constants
-const CAMERA_POSITION: (f32, f32, f32) = (0.0, 0.0, 8.0);
+const CAMERA_POSITION: (f32, f32, f32) = (0.0, 2.5, 8.0);
 
 #[derive(Resource)]
 pub struct AutoRotation {
@@ -82,6 +82,13 @@ pub fn setup(
             ..default()
         },
         Transform::from_xyz(LIGHT_POSITION.0, LIGHT_POSITION.1, LIGHT_POSITION.2),
+    ));
+
+    // Ground plane to receive shadows
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::new(Vec3::Y, Vec2::splat(10.0)))),
+        MeshMaterial3d(materials.add(Color::srgb(1.0, 1.0, 1.0))),
+        Transform::from_xyz(0.0, -2.0, 0.0),
     ));
 
     // Camera
