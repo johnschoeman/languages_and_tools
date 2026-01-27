@@ -1,10 +1,4 @@
 use bevy::prelude::*;
-use bevy::pbr::wireframe::{WireframePlugin, WireframeConfig};
-use bevy::render::{
-    render_resource::WgpuFeatures,
-    settings::{RenderCreation, WgpuSettings},
-    RenderPlugin,
-};
 
 mod scene;
 mod ui;
@@ -24,20 +18,7 @@ use text_input::{
 
 fn main() {
     App::new()
-        .add_plugins(
-            DefaultPlugins.set(RenderPlugin {
-                render_creation: RenderCreation::Automatic(WgpuSettings {
-                    features: WgpuFeatures::POLYGON_MODE_LINE,
-                    ..default()
-                }),
-                ..default()
-            })
-        )
-        .add_plugins(WireframePlugin::default())
-        .insert_resource(WireframeConfig {
-            global: false,
-            default_color: Color::BLACK,
-        })
+        .add_plugins(DefaultPlugins)
         .init_resource::<AutoRotation>()
         .init_resource::<DebugMode>()
         .init_resource::<InputFocusState>()

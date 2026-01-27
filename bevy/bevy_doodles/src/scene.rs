@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::pbr::wireframe::{Wireframe, WireframeColor};
 use crate::text_input::{TextInput, InputField};
 
 // Rotation constants
@@ -17,12 +16,8 @@ const SECOND_CUBE_ROTATION_DEGREES: f32 = 45.0;
 const MAIN_CUBE_INITIAL_ROTATION: (f32, f32, f32) = (115.0, 0.0, -45.0);
 
 // Color constants
-const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7); // Light gray
-const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.4, 0.4); // Darker gray
-const WIREFRAME_COLOR: (f32, f32, f32) = (0.1, 0.1, 0.1); // Dark edge color
-
-// Wireframe constants
-const WIREFRAME_SCALE: f32 = 1.002; // Slightly larger to be visible over solid mesh
+const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.6, 0.15, 0.25); // Burgundy
+const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.08, 0.15); // Deep burgundy
 
 // Light constants
 const LIGHT_POSITION: (f32, f32, f32) = (-4.0, 6.0, 4.0);
@@ -65,16 +60,6 @@ pub fn setup(
             )),
         RotatingCube,
     )).with_children(|parent| {
-        // Wireframe edges for main cube
-        parent.spawn((
-            Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
-            Transform::from_scale(Vec3::splat(WIREFRAME_SCALE)),
-            Wireframe,
-            WireframeColor {
-                color: Color::srgb(WIREFRAME_COLOR.0, WIREFRAME_COLOR.1, WIREFRAME_COLOR.2),
-            },
-        ));
-
         // Leaf cube - attached to main cube
         parent.spawn((
             Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
@@ -87,17 +72,7 @@ pub fn setup(
                     0.0
                 )),
             LeafCube,
-        )).with_children(|leaf_parent| {
-            // Wireframe edges for leaf cube
-            leaf_parent.spawn((
-                Mesh3d(meshes.add(Cuboid::new(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE))),
-                Transform::from_scale(Vec3::splat(WIREFRAME_SCALE)),
-                Wireframe,
-                WireframeColor {
-                    color: Color::srgb(WIREFRAME_COLOR.0, WIREFRAME_COLOR.1, WIREFRAME_COLOR.2),
-                },
-            ));
-        });
+        ));
     });
 
     // Light
@@ -210,9 +185,15 @@ pub fn apply_leaf_rotation_from_inputs(
 }
 
 pub fn sync_main_rotation_to_inputs(
+    auto_rotation: Res<AutoRotation>,
     main_query: Query<&Transform, With<RotatingCube>>,
     mut input_query: Query<(&InputField, &mut TextInput)>,
 ) {
+    // Don't sync when autorotation is enabled to avoid jittery feedback loop
+    if auto_rotation.enabled {
+        return;
+    }
+
     // Get the current rotation of the main cube
     let Some(transform) = main_query.iter().next() else {
         return;
