@@ -6,7 +6,9 @@
       "WebSearch",
       "WebFetch(domain:bevy.org)",
       "WebFetch(domain:docs.rs)",
-      "WebFetch(domain:bevy-cheatbook.github.io)"
+      "WebFetch(domain:bevy-cheatbook.github.io)",
+      "WebFetch(domain:github.com)",
+      "Bash(cargo build:*)"
     ]
   }
 }

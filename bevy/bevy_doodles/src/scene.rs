@@ -16,8 +16,8 @@ const SECOND_CUBE_ROTATION_DEGREES: f32 = 45.0;
 const MAIN_CUBE_INITIAL_ROTATION: (f32, f32, f32) = (115.0, 0.0, -45.0);
 
 // Color constants
-const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.6, 0.15, 0.25); // Burgundy
-const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.4, 0.08, 0.15); // Deep burgundy
+const MAIN_CUBE_COLOR: (f32, f32, f32) = (0.8, 0.8, 0.8); // Light gray
+const LEAF_CUBE_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7); // Medium light gray
 
 // Light constants
 const LIGHT_POSITION: (f32, f32, f32) = (-4.0, 6.0, 4.0);
@@ -41,6 +41,9 @@ pub struct RotatingCube;
 
 #[derive(Component)]
 pub struct LeafCube;
+
+#[derive(Component)]
+pub struct SceneLight;
 
 pub fn setup(
     mut commands: Commands,
@@ -82,6 +85,7 @@ pub fn setup(
             ..default()
         },
         Transform::from_xyz(LIGHT_POSITION.0, LIGHT_POSITION.1, LIGHT_POSITION.2),
+        SceneLight,
     ));
 
     // Ground plane to receive shadows
@@ -271,5 +275,30 @@ pub fn apply_main_rotation_from_inputs(
             rot_y.to_radians(),
             rot_z.to_radians(),
         );
+    }
+}
+
+pub fn apply_light_position_from_inputs(
+    input_query: Query<(&InputField, &TextInput)>,
+    mut light_query: Query<&mut Transform, With<SceneLight>>,
+) {
+    // Collect position values from inputs
+    let mut pos_x = LIGHT_POSITION.0;
+    let mut pos_y = LIGHT_POSITION.1;
+    let mut pos_z = LIGHT_POSITION.2;
+
+    for (field, input) in &input_query {
+        let value = input.value.parse::<f32>().unwrap_or(0.0);
+        match field {
+            InputField::LightPositionX => pos_x = value,
+            InputField::LightPositionY => pos_y = value,
+            InputField::LightPositionZ => pos_z = value,
+            _ => {}
+        }
+    }
+
+    // Update light position
+    for mut transform in &mut light_query {
+        transform.translation = Vec3::new(pos_x, pos_y, pos_z);
     }
 }

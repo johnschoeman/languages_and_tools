@@ -21,6 +21,9 @@ pub enum InputField {
     LeafTranslationX,
     LeafTranslationY,
     LeafTranslationZ,
+    LightPositionX,
+    LightPositionY,
+    LightPositionZ,
 }
 
 #[derive(Resource, Default)]

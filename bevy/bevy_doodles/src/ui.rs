@@ -5,9 +5,9 @@ use crate::text_input::{TextInput, InputField};
 // UI constants
 const UI_PADDING: f32 = 20.0;
 const BUTTON_SPACING: f32 = 10.0;
-const BUTTON_WIDTH: f32 = 150.0;
+const BUTTON_WIDTH: f32 = 100.0;
 const BUTTON_HEIGHT: f32 = 50.0;
-const BUTTON_FONT_SIZE: f32 = 18.0;
+const BUTTON_FONT_SIZE: f32 = 10.0;
 const BUTTON_BG_COLOR: (f32, f32, f32) = (0.15, 0.15, 0.15);
 const BUTTON_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 
@@ -18,7 +18,7 @@ const BUTTON_ROTATION_AMOUNT: f32 = 0.1;
 const PANEL_BG_COLOR: (f32, f32, f32) = (0.1, 0.1, 0.1);
 const PANEL_PADDING: f32 = 15.0;
 const PANEL_ROW_GAP: f32 = 8.0;
-const MAIN_PANEL_BOTTOM_OFFSET: f32 = 280.0;
+const MAIN_PANEL_BOTTOM_OFFSET: f32 = 360.0;
 
 // Input field constants
 const INPUT_WIDTH: f32 = 80.0;
@@ -30,7 +30,7 @@ const INPUT_COLUMN_GAP: f32 = 8.0;
 // Text constants
 const PANEL_TITLE_FONT_SIZE: f32 = 16.0;
 const SECTION_HEADER_FONT_SIZE: f32 = 14.0;
-const INPUT_FONT_SIZE: f32 = 14.0;
+const INPUT_FONT_SIZE: f32 = 10.0;
 const TITLE_TEXT_COLOR: (f32, f32, f32) = (0.9, 0.9, 0.9);
 const SECTION_TEXT_COLOR: (f32, f32, f32) = (0.7, 0.7, 0.7);
 
@@ -58,6 +58,11 @@ const CUBE_CONFIG: CubeConfig = CubeConfig {
     leaf_position_y: 0.0,
     leaf_position_z: -0.9,
 };
+
+// Light position constants (matches LIGHT_POSITION in scene.rs)
+const LIGHT_POSITION_X: f32 = -4.0;
+const LIGHT_POSITION_Y: f32 = 6.0;
+const LIGHT_POSITION_Z: f32 = 4.0;
 
 #[derive(Resource)]
 pub struct UiVisibility {
@@ -134,6 +139,7 @@ pub fn setup_ui(mut commands: Commands) {
     // Configuration panels (left side)
     spawn_main_rotation_panel(&mut commands);
     spawn_leaf_config_panel(&mut commands);
+    spawn_light_position_panel(&mut commands);
 }
 
 fn spawn_button(parent: &mut ChildSpawnerCommands, text: &str, button_type: RotationButton) {
@@ -280,6 +286,39 @@ fn spawn_leaf_config_panel(commands: &mut Commands) {
             spawn_input_row(panel, "X:", &CUBE_CONFIG.leaf_position_x.to_string(), InputField::LeafTranslationX);
             spawn_input_row(panel, "Y:", &CUBE_CONFIG.leaf_position_y.to_string(), InputField::LeafTranslationY);
             spawn_input_row(panel, "Z:", &CUBE_CONFIG.leaf_position_z.to_string(), InputField::LeafTranslationZ);
+        });
+}
+
+fn spawn_light_position_panel(commands: &mut Commands) {
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(UI_PADDING),
+                bottom: Val::Px(UI_PADDING),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(PANEL_ROW_GAP),
+                padding: UiRect::all(Val::Px(PANEL_PADDING)),
+                ..default()
+            },
+            BackgroundColor(Color::srgb(PANEL_BG_COLOR.0, PANEL_BG_COLOR.1, PANEL_BG_COLOR.2)),
+            ToggleableUi,
+        ))
+        .with_children(|panel: &mut ChildSpawnerCommands| {
+            // Title
+            panel.spawn((
+                Text::new("Light Position"),
+                TextFont {
+                    font_size: PANEL_TITLE_FONT_SIZE,
+                    ..default()
+                },
+                TextColor(Color::srgb(TITLE_TEXT_COLOR.0, TITLE_TEXT_COLOR.1, TITLE_TEXT_COLOR.2)),
+            ));
+
+            // Position inputs
+            spawn_input_row(panel, "X:", &LIGHT_POSITION_X.to_string(), InputField::LightPositionX);
+            spawn_input_row(panel, "Y:", &LIGHT_POSITION_Y.to_string(), InputField::LightPositionY);
+            spawn_input_row(panel, "Z:", &LIGHT_POSITION_Z.to_string(), InputField::LightPositionZ);
         });
 }
 
