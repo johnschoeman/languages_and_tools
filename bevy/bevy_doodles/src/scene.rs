@@ -36,6 +36,47 @@ impl Default for AutoRotation {
     }
 }
 
+#[derive(Resource)]
+pub struct ColorAnimation {
+    pub timer: f32,
+    pub change_interval: f32,
+    pub main_cube_hue: f32,
+    pub leaf_cube_hue: f32,
+    pub target_main_hue: f32,
+    pub target_leaf_hue: f32,
+}
+
+impl Default for ColorAnimation {
+    fn default() -> Self {
+        Self {
+            timer: 0.0,
+            change_interval: 20.0, // Change colors every 20 seconds
+            main_cube_hue: 0.6,    // Start with a blue-ish hue
+            leaf_cube_hue: 0.8,    // Start with a purple-ish hue
+            target_main_hue: 0.6,
+            target_leaf_hue: 0.8,
+        }
+    }
+}
+
+// Convert HSL to RGB (attempt to create pleasant colors)
+fn hsl_to_rgb(h: f32, s: f32, l: f32) -> (f32, f32, f32) {
+    let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
+    let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());
+    let m = l - c / 2.0;
+
+    let (r, g, b) = match (h * 6.0) as u32 {
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+
+    (r + m, g + m, b + m)
+}
+
 #[derive(Component)]
 pub struct RotatingCube;
 
@@ -44,6 +85,9 @@ pub struct LeafCube;
 
 #[derive(Component)]
 pub struct SceneLight;
+
+#[derive(Component)]
+pub struct GroundPlane;
 
 pub fn setup(
     mut commands: Commands,
@@ -91,8 +135,9 @@ pub fn setup(
     // Ground plane to receive shadows
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::new(Vec3::Y, Vec2::splat(10.0)))),
-        MeshMaterial3d(materials.add(Color::srgb(1.0, 1.0, 1.0))),
+        MeshMaterial3d(materials.add(Color::srgb(0.9, 0.9, 0.9))),
         Transform::from_xyz(0.0, -2.0, 0.0),
+        GroundPlane,
     ));
 
     // Camera
@@ -301,4 +346,84 @@ pub fn apply_light_position_from_inputs(
     for mut transform in &mut light_query {
         transform.translation = Vec3::new(pos_x, pos_y, pos_z);
     }
+}
+
+pub fn animate_cube_colors(
+    time: Res<Time>,
+    mut color_anim: ResMut<ColorAnimation>,
+    mut clear_color: ResMut<ClearColor>,
+    main_cube_query: Query<&MeshMaterial3d<StandardMaterial>, With<RotatingCube>>,
+    leaf_cube_query: Query<&MeshMaterial3d<StandardMaterial>, With<LeafCube>>,
+    ground_query: Query<&MeshMaterial3d<StandardMaterial>, With<GroundPlane>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // Update timer
+    color_anim.timer += time.delta_secs();
+
+    // Pick new target colors when timer expires
+    if color_anim.timer >= color_anim.change_interval {
+        color_anim.timer = 0.0;
+        // Use time-based pseudo-random for variety
+        let seed = time.elapsed_secs();
+        color_anim.target_main_hue = (seed * 0.1).fract();
+        color_anim.target_leaf_hue = (seed * 0.13 + 0.5).fract();
+    }
+
+    // Smoothly interpolate current hues toward targets (very slow for subtle changes)
+    let lerp_speed = time.delta_secs() * 0.05;
+    color_anim.main_cube_hue = lerp_hue(color_anim.main_cube_hue, color_anim.target_main_hue, lerp_speed);
+    color_anim.leaf_cube_hue = lerp_hue(color_anim.leaf_cube_hue, color_anim.target_leaf_hue, lerp_speed);
+
+    // Convert HSL to RGB with pleasant saturation and lightness
+    let main_rgb = hsl_to_rgb(color_anim.main_cube_hue, 0.5, 0.6); // Soft, pleasant colors
+    let leaf_rgb = hsl_to_rgb(color_anim.leaf_cube_hue, 0.5, 0.5); // Slightly darker
+
+    // Calculate complementary colors for background and ground
+    // Use the average of the two cube hues, shifted for complement
+    let avg_hue = (color_anim.main_cube_hue + color_anim.leaf_cube_hue) / 2.0;
+    let complement_hue = (avg_hue + 0.5).fract(); // Opposite on color wheel
+
+    // Background: dark, desaturated complement
+    let bg_rgb = hsl_to_rgb(complement_hue, 0.15, 0.12);
+
+    // Ground: light, slightly tinted with the complement
+    let ground_rgb = hsl_to_rgb(complement_hue, 0.08, 0.85);
+
+    // Update main cube color
+    for material_handle in &main_cube_query {
+        if let Some(material) = materials.get_mut(&material_handle.0) {
+            material.base_color = Color::srgb(main_rgb.0, main_rgb.1, main_rgb.2);
+        }
+    }
+
+    // Update leaf cube color
+    for material_handle in &leaf_cube_query {
+        if let Some(material) = materials.get_mut(&material_handle.0) {
+            material.base_color = Color::srgb(leaf_rgb.0, leaf_rgb.1, leaf_rgb.2);
+        }
+    }
+
+    // Update ground color
+    for material_handle in &ground_query {
+        if let Some(material) = materials.get_mut(&material_handle.0) {
+            material.base_color = Color::srgb(ground_rgb.0, ground_rgb.1, ground_rgb.2);
+        }
+    }
+
+    // Update background color
+    clear_color.0 = Color::srgb(bg_rgb.0, bg_rgb.1, bg_rgb.2);
+}
+
+// Lerp between hues, handling wrap-around (0.0 and 1.0 are the same hue)
+fn lerp_hue(current: f32, target: f32, t: f32) -> f32 {
+    let diff = target - current;
+    // Handle wrap-around: if difference is more than 0.5, go the short way
+    let adjusted_diff = if diff > 0.5 {
+        diff - 1.0
+    } else if diff < -0.5 {
+        diff + 1.0
+    } else {
+        diff
+    };
+    (current + adjusted_diff * t).rem_euclid(1.0)
 }
